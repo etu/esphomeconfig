@@ -1,0 +1,69 @@
+substitutions:
+  device_name: esphome-plant1
+  plant_name: Kruka 1
+
+# Include the commons file
+<<: !include common.yaml
+<<: !include esp32c3-common.yaml
+
+# Moisture sensor (GPIO0)
+sensor:
+  - platform: adc
+    pin: GPIO0
+    id: soil_raw
+    name: "${plant_name} fukt (%)"
+    attenuation: 12db
+    update_interval: 30s
+    filters:
+      - calibrate_linear:
+          - 2.45 -> 0.0      # dry (in air)
+          - 1.15 -> 100.0    # wet (in water)
+      - clamp:
+          min_value: 0
+          max_value: 100
+    unit_of_measurement: "%"
+    icon: "mdi:flower"
+
+# Output for KY-016 (R, G, B)
+output:
+  - platform: ledc
+    pin: GPIO3
+    id: out_red
+  - platform: ledc
+    pin: GPIO4
+    id: out_green
+  - platform: ledc
+    pin: GPIO5
+    id: out_blue
+
+# Make RGB light outputs PWM
+light:
+  - platform: rgb
+    id: plant_led
+    name: "${plant_name} LED"
+    red: out_red
+    green: out_green
+    blue: out_blue
+    default_transition_length: 200ms
+    restore_mode: ALWAYS_ON
+
+# Color logic based on moisture level
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          const float m = id(soil_raw).state;
+          if (isnan(m)) return;
+          if (m >= 45) {
+            // Green = moist
+            id(plant_led).turn_on().set_brightness(1.0)
+              .set_red(0.0).set_green(1.0).set_blue(0.0).perform();
+          } else if (m >= 30) {
+            // Yellow = starting to be dry
+            id(plant_led).turn_on().set_brightness(1.0)
+              .set_red(1.0).set_green(0.65).set_blue(0.0).perform();
+          } else {
+            // Red = dry
+            id(plant_led).turn_on().set_brightness(1.0)
+              .set_red(1.0).set_green(0.0).set_blue(0.0).perform();
+          }
