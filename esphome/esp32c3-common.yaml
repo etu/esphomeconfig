@@ -1,0 +1,11 @@
+esphome:
+  name: ${device_name}
+  platformio_options:
+    platform: platformio/espressif32@6.11.0
+    platform_packages:
+      - platformio/framework-espidf@3.50401.0
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
