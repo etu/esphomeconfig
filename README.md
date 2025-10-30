@@ -1,0 +1,1 @@
+# ESPHome configs or something
