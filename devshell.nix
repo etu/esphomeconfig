@@ -5,6 +5,7 @@ pkgs.mkShell {
     pkgs.esphome
     pkgs.esptool
     pkgs.just
+    pkgs.openssl
   ];
 
   # Add environment variables
